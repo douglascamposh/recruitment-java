@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    ports:
+      - "8000:8000" # Puerto predeterminado de ChromaDB
+    volumes:
+      - chromadb_data:/app/chroma/chroma-data # Persistencia de datos
+
+volumes:
+  chromadb_data:

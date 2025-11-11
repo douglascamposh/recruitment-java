@@ -1,0 +1,11 @@
+package com.rag.gemini_rag.enums;
+
+public enum PostType {
+    B2B_SAAS_LAUNCH,
+    ECOMMERCE_FLASH_SALE,
+    LOCAL_RESTAURANT_PROMO,
+    EDUCATIONAL_CONTENT,
+    COMMUNITY_ENGAGEMENT,
+    BRAND_AWARENESS,
+    UNDEFINED;
+}
