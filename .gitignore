@@ -1,6 +1,6 @@
 HELP.md
 target/
-ia-project/.mvn/wrapper/maven-wrapper.jar
+gemini-rag/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
