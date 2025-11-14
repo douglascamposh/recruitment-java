@@ -10,8 +10,6 @@ public class Utils {
         if (rawResponse == null || rawResponse.isBlank()) {
             return "";
         }
-
-        // Limpieza común: eliminar bloques Markdown como ```json ... ```
         if (rawResponse.startsWith("```")) {
             rawResponse = rawResponse
                     .replaceAll("(?s)```json", "")

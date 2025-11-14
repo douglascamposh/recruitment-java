@@ -11,9 +11,17 @@ public record CandidateProfile(
         String originalFileName,
         String candidateName,
         String summary,
+        String email,
+        String phone,
+        String sex,
+        String nationality,
+        String location,
         List<String> skills,
+        List<Education> education,
         List<Experience> workExperience,
-        String education
+        List<Language> languages,
+        List<String> certifications,
+        LinkProfile links
 ) {
-    public record Experience(String role, String company, String duration) {}
+    public record Experience(String role, String company, String duration, String jobDescription) {}
 }
