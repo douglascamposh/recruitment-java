@@ -107,7 +107,7 @@ const EditableProfileForm: React.FC<EditableProfileFormProps> = ({ profile, setP
       <h3 className="text-lg font-semibold border-b pb-2">Habilidades</h3>
       <div>
         <div className="flex flex-wrap gap-2 mb-2">
-          {profile.skills.map(skill => (
+          {profile?.skills.map(skill => (
             <span key={skill} className="flex items-center bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
               {skill}
               <button onClick={() => handleRemoveStringItem(skill, 'skills')} className="ml-2 text-blue-600 hover:text-blue-800"><Trash2 size={14} /></button>
