@@ -8,7 +8,7 @@ import FileUpload from '@/components/forms/FileUpload';
 import EditableProfileForm from '@/components/forms/EditableProfileForm';
 import SkeletonCard from '@/components/skeletons/SkeletonCard';
 import api from '@/services/api';
-import { CandidateProfile } from '@/types';
+import { CandidateProfile, ImprovementCandidateResponse } from '@/types';
 
 const CandidatePage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -36,13 +36,13 @@ const CandidatePage = () => {
     setImprovedCv(null);
 
     toast.promise(
-      api.post('/candidates/improve', formData, {
+      api.post<ImprovementCandidateResponse>('/candidates/improve', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       }),
       {
         loading: 'Mejorando tu CV...',
         success: (response) => {
-          setImprovedCv(response.data);
+          setImprovedCv(response.data.profile);
           setIsLoading(false);
           return '¡CV mejorado con éxito!';
         },
