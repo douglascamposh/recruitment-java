@@ -74,7 +74,7 @@ public class RecruitmentController {
 
         try {
             ImprovementCandidateRequest improvedCv = cvImprovementService.getImprovedCvProfile(file, jobDescription);
-            return ResponseEntity.ok(Map.of("improvedCv", improvedCv));
+            return ResponseEntity.ok(improvedCv);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error processing the file: " + e.getMessage()));
