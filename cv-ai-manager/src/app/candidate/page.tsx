@@ -14,6 +14,7 @@ const CandidatePage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const [improvedCv, setImprovedCv] = useState<CandidateProfile | null>(null);
+  const [improvedText, setImprovedText] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileSelect = (selectedFile: File) => {
@@ -43,6 +44,7 @@ const CandidatePage = () => {
         loading: 'Mejorando tu CV...',
         success: (response) => {
           setImprovedCv(response.data.profile);
+          setImprovedText(response.data.improvedText);
           setIsLoading(false);
           return '¡CV mejorado con éxito!';
         },
@@ -103,16 +105,27 @@ const CandidatePage = () => {
           <h2 className="text-2xl font-semibold text-gray-700">Resultados</h2>
           {isLoading && <SkeletonCard />}
           {improvedCv && (
-            <div className="p-6 bg-white rounded-lg shadow-md">
-              <h3 className="text-xl font-bold mb-4">Edita tu Perfil Mejorado</h3>
-              <EditableProfileForm profile={improvedCv} setProfile={setImprovedCv} />
-              <button
-                onClick={handleSaveCv}
-                className="mt-6 w-full flex items-center justify-center bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors"
-              >
-                <Save className="w-5 h-5 mr-2" />
-                Guardar Perfil
-              </button>
+            <div className="space-y-6">
+              {/* Vista del Texto Mejorado */}
+              <div className="p-6 bg-white rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Texto del CV Mejorado</h3>
+                <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded-md text-sm">
+                  {improvedText}
+                </pre>
+              </div>
+
+              {/* Formulario de Edición */}
+              <div className="p-6 bg-white rounded-lg shadow-md">
+                <h3 className="text-xl font-bold mb-4">Edita tu Perfil Mejorado</h3>
+                <EditableProfileForm profile={improvedCv} setProfile={setImprovedCv} />
+                <button
+                  onClick={handleSaveCv}
+                  className="mt-6 w-full flex items-center justify-center bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <Save className="w-5 h-5 mr-2" />
+                  Guardar Perfil
+                </button>
+              </div>
             </div>
           )}
         </div>
