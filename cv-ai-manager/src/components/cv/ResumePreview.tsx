@@ -5,12 +5,12 @@ import {
   MapPin, 
   Linkedin, 
   Github, 
-  Globe, // Usado para Portfolio
+  Globe,
   Briefcase, 
   GraduationCap, 
-  Globe2, // Usado para Idiomas
+  Globe2,
   Layers, 
-  Award // Usado para Certificaciones
+  Award
 } from 'lucide-react';
 import { CandidateProfile } from '@/types';
 
@@ -18,7 +18,6 @@ interface ResumePreviewProps {
   data: CandidateProfile | null;
 }
 
-// Usamos forwardRef para que la librería 'react-to-print' pueda acceder al DOM de este componente
 const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, ref) => {
   if (!data) return null;
 
@@ -28,16 +27,13 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
       className="bg-white w-full max-w-[210mm] mx-auto min-h-[297mm] shadow-xl rounded-sm text-slate-800 font-sans mb-10 print:shadow-none print:mb-0 print:w-full print:max-w-none"
     >
       
-      {/* HEADER / HERO SECTION */}
       <header className="bg-slate-900 text-white p-10 print:bg-slate-900 print:text-white print-color-adjust-exact">
         <div className="flex justify-between items-start">
           
-          {/* Información Principal */}
           <div>
             <h1 className="text-4xl font-bold uppercase tracking-wider mb-2 leading-tight">
               {data.candidateName}
             </h1>
-            {/* Puedes hacer este título dinámico si viene en el JSON, por ahora lo dejamos fijo o basado en el rol más reciente */}
             <div className="text-blue-400 font-medium text-lg mb-6">
               {data.workExperience?.[0]?.role || 'Professional Candidate'}
             </div>
@@ -61,7 +57,6 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
             </div>
           </div>
 
-          {/* Iconos Sociales (Se ocultan al imprimir porque no se pueden cliquear en papel) */}
           <div className="flex gap-3 print:hidden">
              {data.links?.linkedIn && (
                <a 
@@ -100,13 +95,10 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
         </div>
       </header>
 
-      {/* GRID LAYOUT (2 Columnas) */}
       <div className="grid grid-cols-12 min-h-[800px]">
         
-        {/* === COLUMNA IZQUIERDA (Sidebar) === */}
         <aside className="col-span-12 md:col-span-4 bg-slate-50 p-8 border-r border-slate-200 print:bg-slate-50 print:col-span-4 print:border-r">
           
-          {/* Habilidades */}
           {data.skills && data.skills.length > 0 && (
             <div className="mb-8 break-inside-avoid">
               <h3 className="flex items-center gap-2 font-bold text-slate-900 uppercase tracking-widest text-xs border-b-2 border-slate-200 pb-2 mb-4">
@@ -122,7 +114,6 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
             </div>
           )}
 
-          {/* Educación */}
           {data.education && data.education.length > 0 && (
             <div className="mb-8 break-inside-avoid">
               <h3 className="flex items-center gap-2 font-bold text-slate-900 uppercase tracking-widest text-xs border-b-2 border-slate-200 pb-2 mb-4">
@@ -140,7 +131,6 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
             </div>
           )}
 
-          {/* Idiomas */}
           {data.languages && data.languages.length > 0 && (
             <div className="mb-8 break-inside-avoid">
                <h3 className="flex items-center gap-2 font-bold text-slate-900 uppercase tracking-widest text-xs border-b-2 border-slate-200 pb-2 mb-4">
@@ -159,7 +149,6 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
             </div>
           )}
 
-          {/* Certificaciones (Si existen) */}
           {data.certifications && data.certifications.length > 0 && (
             <div className="mb-8 break-inside-avoid">
                <h3 className="flex items-center gap-2 font-bold text-slate-900 uppercase tracking-widest text-xs border-b-2 border-slate-200 pb-2 mb-4">
@@ -177,10 +166,8 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
 
         </aside>
 
-        {/* === COLUMNA DERECHA (Main Content) === */}
         <main className="col-span-12 md:col-span-8 p-8 print:col-span-8 bg-white">
           
-          {/* Resumen Profesional */}
           {data.summary && (
             <div className="mb-10 break-inside-avoid">
               <h3 className="font-bold text-lg text-slate-800 mb-3 border-l-4 border-blue-600 pl-3">
@@ -192,22 +179,18 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
             </div>
           )}
 
-          {/* Experiencia Laboral */}
           {data.workExperience && data.workExperience.length > 0 && (
             <div>
               <h3 className="flex items-center gap-2 font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-6">
                 <Briefcase className="w-5 h-5 text-blue-600" /> Experiencia Laboral
               </h3>
               
-              {/* Línea de tiempo container */}
               <div className="space-y-8 relative border-l-2 border-slate-100 ml-3 pl-8 py-2">
                 {data.workExperience.map((exp, i) => (
                   <div key={i} className="relative break-inside-avoid mb-6">
                     
-                    {/* Punto de la línea de tiempo */}
                     <span className="absolute -left-[41px] top-1.5 h-5 w-5 rounded-full border-4 border-white bg-blue-600 shadow-sm print:bg-blue-600 print:shadow-none print:border-gray-100"></span>
                     
-                    {/* Header del trabajo */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
                       <h4 className="font-bold text-slate-900 text-lg">{exp.role}</h4>
                       <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full self-start print:bg-gray-100 print:text-black border border-blue-100 print:border-gray-200 whitespace-nowrap mt-1 sm:mt-0">
@@ -219,7 +202,6 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
                       {exp.company}
                     </div>
                     
-                    {/* Descripción */}
                     <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line text-justify">
                       {exp.jobDescription}
                     </p>
@@ -231,12 +213,11 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
         </main>
       </div>
 
-      {/* ESTILOS CSS INYECTADOS SOLO PARA IMPRESIÓN */}
       <style jsx global>{`
         @media print {
           @page {
-            margin: 0;
-            size: auto;
+            size: A4;
+            margin: 15mm;
           }
           body {
             /* Asegura que los colores de fondo (gris del sidebar, azul del header) se impriman */
@@ -254,7 +235,6 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, 
   );
 });
 
-// Necesario para que React DevTools muestre el nombre correcto con forwardRef
 ResumePreview.displayName = 'ResumePreview';
 
 export default ResumePreview;

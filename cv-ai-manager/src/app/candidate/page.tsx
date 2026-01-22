@@ -2,21 +2,18 @@
 
 import React, { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { useReactToPrint } from 'react-to-print'; // Librería de impresión
-import { Upload, Save, Eye, PenTool, FileText, Download, Briefcase } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
+import { Save, Eye, PenTool, FileText, Download, Briefcase } from 'lucide-react';
 
-// Componentes
 import FileUpload from '@/components/forms/FileUpload';
 import EditableProfileForm from '@/components/forms/EditableProfileForm'; 
 import ResumePreview from '@/components/cv/ResumePreview'; 
 import SkeletonCard from '@/components/skeletons/SkeletonCard';
 
-// API y Tipos
 import api from '@/services/api';
 import { CandidateProfile,ImprovementCandidateResponse } from '@/types';
 
 const CandidatePage = () => {
-  // --- ESTADOS DE DATOS ---
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const [improvedCv, setImprovedCv] = useState<CandidateProfile | null>(null);
