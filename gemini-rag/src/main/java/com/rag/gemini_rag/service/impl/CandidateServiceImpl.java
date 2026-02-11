@@ -1,6 +1,7 @@
 package com.rag.gemini_rag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.gax.rpc.InternalException;
 import com.rag.gemini_rag.dto.CandidateProfile;
 import com.rag.gemini_rag.dto.ImprovementCandidateRequest;
 import com.rag.gemini_rag.repository.CandidateProfileRepository;
@@ -16,7 +17,9 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -40,7 +43,8 @@ public class CandidateServiceImpl implements ICandidateService {
         this.candidateRepository = candidateRepository;
         this.objectMapper = objectMapper;
     }
-
+        // la app se podria llamar networking
+    //solo guarda el csv tal cual
     @Override
     public CandidateProfile ingestAndProcessCv(MultipartFile cvFile) throws IOException {
         // 1. Extraer y limpiar el texto del archivo
@@ -48,10 +52,11 @@ public class CandidateServiceImpl implements ICandidateService {
 
         // 2. Usar el LLM para extraer información estructurada
         String jsonResponse = extractStructuredDataFromCv(cvText);
-        jsonResponse = Utils.cleanRawJson(jsonResponse); // Asumiendo que tienes esta utilidad
+        jsonResponse = Utils.cleanRawJson(jsonResponse);
 
         CandidateProfile profile = objectMapper.readValue(jsonResponse, CandidateProfile.class);
         log.info(" archvo pdf name>>>>>>>>>>>>", cvFile.getOriginalFilename());
+        log.info(" archvo pdf get name ???????????????", cvFile.getName());
         CandidateProfile profileToSave = new CandidateProfile(
                 null,
                 cvFile.getOriginalFilename(),
@@ -79,8 +84,11 @@ public class CandidateServiceImpl implements ICandidateService {
 
         return savedProfile;
     }
-
+    //Recibe un dto con la informacion del CV mejorado y lo guarda
     public CandidateProfile saveImprovedProfile(ImprovementCandidateRequest improvementCandidate) {
+//        if (improvementCandidate.profile() == null || improvementCandidate.improvedText() == null) {
+//            throw new ErrorResponseException(HttpStatus.BAD_REQUEST, "profile or improvedtext is required"); //deberia ser badrequest o deberia validar los datos
+//        }
         CandidateProfile savedProfile = candidateRepository.save(improvementCandidate.profile());
 
         Document vectorDocument = new Document(

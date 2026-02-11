@@ -23,5 +23,4 @@ public record CandidateProfile(
         List<String> certifications,
         LinkProfile links
 ) {
-    public record Experience(String role, String company, String duration, String jobDescription) {}
 }
