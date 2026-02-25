@@ -55,7 +55,6 @@ export interface ImprovementCandidateResponse {
 
 // Tipo para el endpoint /recruitment/match, ajustado al nuevo CandidateProfile
 export interface CandidateMatch {
-  candidate: CandidateProfile;
-  score: number;
-  matchingSkills: string[];
+  profile: CandidateProfile;
+  similarityScore: number;
 }

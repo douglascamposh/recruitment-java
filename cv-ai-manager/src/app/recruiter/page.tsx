@@ -7,6 +7,7 @@ import { Search, UserCheck } from 'lucide-react';
 import api from '@/services/api';
 import { CandidateMatch, CandidateProfile } from '@/types';
 import SkeletonCard from '@/components/skeletons/SkeletonCard';
+import { json } from 'node:stream/consumers';
 
 const RecruiterPage = () => {
   const [jobDescription, setJobDescription] = useState('');
@@ -18,8 +19,10 @@ const RecruiterPage = () => {
   useEffect(() => {
     const fetchIngestedProfiles = async () => {
       try {
-        const response = await api.get('/candidates');
-        setIngestedProfiles(response.data);
+        const userId = '12345';// TODO reemplazar con el ID real del usuario autenticado
+        const response = await api.get(`/api/v1/candidates?userId=${userId}&page=0&size=20`);
+        console.log('Perfiles ingeridos:', response.data);
+        setIngestedProfiles(response.data.content);
       } catch (error) {
         toast.error('No se pudieron cargar los perfiles de los candidatos.');
       } finally {
@@ -39,10 +42,11 @@ const RecruiterPage = () => {
     setMatches([]);
 
     toast.promise(
-      api.post('/recruitment/match', { jobDescription }),
+      api.post('/api/v1/recruitment/match', { jobDescription }),
       {
         loading: 'Buscando los mejores candidatos...',
         success: (response) => {
+          console.log('Resultados de búsqueda:', response.data);
           setMatches(response.data);
           setIsSearching(false);
           return response.data.length > 0
@@ -89,15 +93,20 @@ const RecruiterPage = () => {
         <h2 className="text-2xl font-semibold mb-4 text-gray-700">Resultados de la Búsqueda</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isSearching && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+          
           {matches.map((match) => (
-            <div key={match.candidate.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <div key={match.profile.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="flex justify-between items-start">
-                <h3 className="text-xl font-bold text-gray-800">{match.candidate.name}</h3>
-                <span className="text-lg font-semibold text-blue-600">{match.score}%</span>
+                <h3 className="text-xl font-bold text-gray-800">{match.profile.candidateName}</h3>
+                
+                <span className="text-lg font-semibold text-blue-600">
+                  {(match.similarityScore * 100).toFixed(0)}%
+                </span>
               </div>
-              <p className="text-gray-600 mt-2">Habilidades coincidentes:</p>
+              
+              <p className="text-gray-600 mt-2">Habilidades principales:</p>
               <div className="flex flex-wrap gap-2 mt-2">
-                {match.matchingSkills.map((skill) => (
+                {match.profile.skills.slice(0, 5).map((skill) => (
                   <span key={skill} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
                     {skill}
                   </span>
@@ -120,7 +129,7 @@ const RecruiterPage = () => {
                   <div className="flex items-center">
                     <UserCheck className="w-5 h-5 mr-3 text-green-500" />
                     <div>
-                      <p className="font-semibold">{profile.name}</p>
+                      <p className="font-semibold">{profile.candidateName}</p>
                       <p className="text-sm text-gray-600">{profile.email}</p>
                     </div>
                   </div>

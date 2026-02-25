@@ -16,6 +16,7 @@ public record CandidateProfile(
         String sex,
         String nationality,
         String location,
+        String userId,
         List<String> skills,
         List<Education> education,
         List<Experience> workExperience,

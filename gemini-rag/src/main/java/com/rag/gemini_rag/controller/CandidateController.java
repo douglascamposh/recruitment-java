@@ -1,12 +1,14 @@
 package com.rag.gemini_rag.controller;
 
 import com.rag.gemini_rag.dto.CandidateProfile;
-import com.rag.gemini_rag.dto.ImprovementCandidateRequest;
+import com.rag.gemini_rag.dto.ImprovementCandidateResponse;
 import com.rag.gemini_rag.service.ICandidateService;
-import com.rag.gemini_rag.service.ICvImprovementService;
-import com.rag.gemini_rag.service.IRecruitmentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,14 +23,32 @@ import java.util.Map;
 @RequestMapping("/api/v1/candidates")
 public class CandidateController {
     private final ICandidateService candidateService;
-    private final ICvImprovementService cvImprovementService;
-    public CandidateController(ICandidateService candidateService, ICvImprovementService cvImprovementService) {
+    public CandidateController(ICandidateService candidateService) {
         this.candidateService = candidateService;
-        this.cvImprovementService = cvImprovementService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<?> candidatesByUserId(
+            @RequestParam("userId") String userId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "The userId parameter is required."));
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CandidateProfile> candidateProfilesPage = candidateService.getCandidatesByUserId(userId, pageable);
+
+        if (candidateProfilesPage.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "No candidate profiles found for the given userId."));
+        }
+
+        return ResponseEntity.ok(candidateProfilesPage);
     }
 
     @PostMapping()
-    public ResponseEntity<?> save(@RequestBody ImprovementCandidateRequest candidate) {
+    public ResponseEntity<?> save(@RequestBody ImprovementCandidateResponse candidate) {
         if (candidate == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "The file is empty."));
         }

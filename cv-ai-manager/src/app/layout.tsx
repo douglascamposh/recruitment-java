@@ -31,15 +31,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex justify-between items-center h-16">
               <div className="flex-shrink-0">
                 <Link href="/" className="text-2xl font-bold text-blue-600">
-                  CV-AI
+                  Networking
                 </Link>
               </div>
               <div className="hidden md:flex md:space-x-8">
                 <Link href="/candidate" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Candidato
+                  Candidate
                 </Link>
                 <Link href="/recruiter" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Reclutador
+                  Recruiter
                 </Link>
               </div>
             </div>

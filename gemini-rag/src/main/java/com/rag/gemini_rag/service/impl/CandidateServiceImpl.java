@@ -1,9 +1,8 @@
 package com.rag.gemini_rag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.gax.rpc.InternalException;
 import com.rag.gemini_rag.dto.CandidateProfile;
-import com.rag.gemini_rag.dto.ImprovementCandidateRequest;
+import com.rag.gemini_rag.dto.ImprovementCandidateResponse;
 import com.rag.gemini_rag.repository.CandidateProfileRepository;
 import com.rag.gemini_rag.service.ICandidateService;
 import com.rag.gemini_rag.service.IDocumentReaderService;
@@ -17,9 +16,9 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.ErrorResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -57,6 +56,7 @@ public class CandidateServiceImpl implements ICandidateService {
         CandidateProfile profile = objectMapper.readValue(jsonResponse, CandidateProfile.class);
         log.info(" archvo pdf name>>>>>>>>>>>>", cvFile.getOriginalFilename());
         log.info(" archvo pdf get name ???????????????", cvFile.getName());
+        String userId = "12345"; // obtener del sistema si no tuvieramos user logged deberia ser null
         CandidateProfile profileToSave = new CandidateProfile(
                 null,
                 cvFile.getOriginalFilename(),
@@ -67,6 +67,7 @@ public class CandidateServiceImpl implements ICandidateService {
                 profile.sex(),
                 profile.nationality(),
                 profile.location(),
+                userId,
                 profile.skills(),
                 profile.education(),
                 profile.workExperience(),
@@ -85,7 +86,7 @@ public class CandidateServiceImpl implements ICandidateService {
         return savedProfile;
     }
     //Recibe un dto con la informacion del CV mejorado y lo guarda
-    public CandidateProfile saveImprovedProfile(ImprovementCandidateRequest improvementCandidate) {
+    public CandidateProfile saveImprovedProfile(ImprovementCandidateResponse improvementCandidate) {
 //        if (improvementCandidate.profile() == null || improvementCandidate.improvedText() == null) {
 //            throw new ErrorResponseException(HttpStatus.BAD_REQUEST, "profile or improvedtext is required"); //deberia ser badrequest o deberia validar los datos
 //        }
@@ -98,6 +99,11 @@ public class CandidateServiceImpl implements ICandidateService {
 
         vectorStore.add(List.of(vectorDocument));
         return savedProfile;
+    }
+
+    @Override
+    public Page<CandidateProfile> getCandidatesByUserId(String userId, Pageable pageable) {
+        return candidateRepository.findByUserId(userId, pageable);
     }
 
     private String extractStructuredDataFromCv(String cvText) {

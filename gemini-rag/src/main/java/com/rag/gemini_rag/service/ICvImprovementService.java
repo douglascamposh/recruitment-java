@@ -1,10 +1,10 @@
 package com.rag.gemini_rag.service;
 
-import com.rag.gemini_rag.dto.ImprovementCandidateRequest;
+import com.rag.gemini_rag.dto.ImprovementCandidateResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 public interface ICvImprovementService {
-    ImprovementCandidateRequest getImprovedCvProfile(MultipartFile cvFile, String targetJobDescription) throws IOException;
+    ImprovementCandidateResponse getImprovedCvProfile(MultipartFile cvFile, String targetJobDescription, String companyName) throws IOException;
 }
