@@ -60,7 +60,7 @@ const CandidatePage = () => {
 
   // --- PRINT REF ---
   const componentRef = useRef<HTMLDivElement>(null);
-  const [showLimitModal, setShowLimitModal] = useState(true);
+  const [showLimitModal, setShowLimitModal] = useState(false); // For rate limit
 
   // --- HANDLERS ---
 
