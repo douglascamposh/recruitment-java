@@ -34,3 +34,5 @@ build/
 
 # Log files
 npm_output.log
+
+.env
