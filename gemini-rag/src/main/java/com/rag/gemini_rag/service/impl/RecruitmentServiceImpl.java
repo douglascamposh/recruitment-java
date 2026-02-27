@@ -3,6 +3,7 @@ package com.rag.gemini_rag.service.impl;
 import com.rag.gemini_rag.dto.CandidateMatch;
 import com.rag.gemini_rag.repository.CandidateProfileRepository;
 import com.rag.gemini_rag.service.IRecruitmentService;
+import com.rag.gemini_rag.utils.Utils;
 import com.rag.gemini_rag.utils.VectorStoreHelper;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -31,7 +32,8 @@ public class RecruitmentServiceImpl implements IRecruitmentService {
         // 1. Buscar en el Vector Store los CVs más similares a la descripción del trabajo
 //        SearchRequest request = SearchRequest.query(jobDescription).withTopK(topK);
 //        List<Document> similarDocuments = vectorStore.similaritySearch(request);
-        List<Document> similarDocuments = vectorHelper.searchSimilarSpams(jobDescription);
+        String jobDescriptionCleaned = Utils.cleanText(jobDescription);
+        List<Document> similarDocuments = vectorHelper.searchSimilarSpams(jobDescriptionCleaned);
 
         // 2. Para cada documento encontrado, recuperar el perfil completo desde MongoDB
         return similarDocuments.stream()

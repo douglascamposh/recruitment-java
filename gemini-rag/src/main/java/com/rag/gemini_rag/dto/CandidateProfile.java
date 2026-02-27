@@ -16,6 +16,7 @@ public record CandidateProfile(
         String sex,
         String nationality,
         String location,
+        String userId,
         List<String> skills,
         List<Education> education,
         List<Experience> workExperience,
@@ -23,5 +24,4 @@ public record CandidateProfile(
         List<String> certifications,
         LinkProfile links
 ) {
-    public record Experience(String role, String company, String duration, String jobDescription) {}
 }

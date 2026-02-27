@@ -1,33 +1,56 @@
 version: '3.8'
 
 services:
-  mongo:
-    image: mongo
+  api:
+    image: douglascamposh/cv-analizer:latest
+    container_name: cv-analizer-api
     restart: always
     ports:
-    - "27017:27017"
+      - "8080:8080"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: secret
+      - SPRING_DATA_MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongo:27017/recruitment_db?authSource=admin
+      - SPRING_AI_VECTORSTORE_CHROMA_CLIENT_HOST=http://chroma
+      - SPRING_AI_VECTORSTORE_CHROMA_CLIENT_PORT=8000
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/google-credentials.json
+    depends_on:
+      - mongo
+      - chroma
+    volumes:
+      - ./google-credentials.json:/app/secrets/google-credentials.json:ro
+  mongo:
+    image: mongo
+    container_name: mongo-db
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+    volumes:
+      - mongo_data:/data/db
 
   mongo-express:
     image: mongo-express
+    container_name: mongo-express
     restart: always
     ports:
-      - 8081:8081
+      - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:secret@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASS}@mongo:27017/
       ME_CONFIG_BASICAUTH_ENABLED: "true"
-      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
-      ME_CONFIG_BASICAUTH_PASSWORD: pass
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_PASS}
+    depends_on:
+      - mongo
 
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
+    container_name: chroma-db
     ports:
-      - "8000:8000" # Puerto predeterminado de ChromaDB
+      - "8000:8000"
     volumes:
-      - chromadb_data:/app/chroma/chroma-data # Persistencia de datos
+      - chromadb_data:/app/chroma/chroma-data
 
 volumes:
   chromadb_data:
-
+  mongo_data:

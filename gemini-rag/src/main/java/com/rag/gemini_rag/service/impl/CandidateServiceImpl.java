@@ -2,7 +2,7 @@ package com.rag.gemini_rag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rag.gemini_rag.dto.CandidateProfile;
-import com.rag.gemini_rag.dto.ImprovementCandidateRequest;
+import com.rag.gemini_rag.dto.ImprovementCandidateResponse;
 import com.rag.gemini_rag.repository.CandidateProfileRepository;
 import com.rag.gemini_rag.service.ICandidateService;
 import com.rag.gemini_rag.service.IDocumentReaderService;
@@ -16,6 +16,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,7 +42,8 @@ public class CandidateServiceImpl implements ICandidateService {
         this.candidateRepository = candidateRepository;
         this.objectMapper = objectMapper;
     }
-
+        // la app se podria llamar networking
+    //solo guarda el csv tal cual
     @Override
     public CandidateProfile ingestAndProcessCv(MultipartFile cvFile) throws IOException {
         // 1. Extraer y limpiar el texto del archivo
@@ -48,10 +51,12 @@ public class CandidateServiceImpl implements ICandidateService {
 
         // 2. Usar el LLM para extraer información estructurada
         String jsonResponse = extractStructuredDataFromCv(cvText);
-        jsonResponse = Utils.cleanRawJson(jsonResponse); // Asumiendo que tienes esta utilidad
+        jsonResponse = Utils.cleanRawJson(jsonResponse);
 
         CandidateProfile profile = objectMapper.readValue(jsonResponse, CandidateProfile.class);
         log.info(" archvo pdf name>>>>>>>>>>>>", cvFile.getOriginalFilename());
+        log.info(" archvo pdf get name ???????????????", cvFile.getName());
+        String userId = "12345"; // obtener del sistema si no tuvieramos user logged deberia ser null
         CandidateProfile profileToSave = new CandidateProfile(
                 null,
                 cvFile.getOriginalFilename(),
@@ -62,6 +67,7 @@ public class CandidateServiceImpl implements ICandidateService {
                 profile.sex(),
                 profile.nationality(),
                 profile.location(),
+                userId,
                 profile.skills(),
                 profile.education(),
                 profile.workExperience(),
@@ -79,8 +85,11 @@ public class CandidateServiceImpl implements ICandidateService {
 
         return savedProfile;
     }
-
-    public CandidateProfile saveImprovedProfile(ImprovementCandidateRequest improvementCandidate) {
+    //Recibe un dto con la informacion del CV mejorado y lo guarda
+    public CandidateProfile saveImprovedProfile(ImprovementCandidateResponse improvementCandidate) {
+//        if (improvementCandidate.profile() == null || improvementCandidate.improvedText() == null) {
+//            throw new ErrorResponseException(HttpStatus.BAD_REQUEST, "profile or improvedtext is required"); //deberia ser badrequest o deberia validar los datos
+//        }
         CandidateProfile savedProfile = candidateRepository.save(improvementCandidate.profile());
 
         Document vectorDocument = new Document(
@@ -90,6 +99,11 @@ public class CandidateServiceImpl implements ICandidateService {
 
         vectorStore.add(List.of(vectorDocument));
         return savedProfile;
+    }
+
+    @Override
+    public Page<CandidateProfile> getCandidatesByUserId(String userId, Pageable pageable) {
+        return candidateRepository.findByUserId(userId, pageable);
     }
 
     private String extractStructuredDataFromCv(String cvText) {
