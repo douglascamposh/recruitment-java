@@ -42,7 +42,7 @@ services:
       - mongo
 
   chroma:
-    image: ghcr.io/chroma-core/chroma:latest
+    image: ghcr.io/chroma-core/chroma:1.0.0
     container_name: chroma-db
     ports:
       - "8000:8000"
