@@ -6,7 +6,7 @@ const nextConfig = {
     return [
       {
         source: '/api/backend/:path*',
-        destination: `${process.env.AWS_EC2_URL}/api/:path*`,
+        destination: `${process.env.AWS_EC2_URL}/:path*`,
       },
     ]
   },
