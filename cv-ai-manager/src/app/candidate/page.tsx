@@ -86,9 +86,7 @@ const CandidatePage = () => {
     setInterviewPrep(null);
 
     toast.promise(
-      api.post<ImprovementCandidateResponse>('/api/v1/cvs/improve', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }),
+      api.post<ImprovementCandidateResponse>('/api/v1/cvs/improve', formData),
       {
         loading: 'Analyzing profile, searching for courses, and improving CV...',
         success: (response) => {
