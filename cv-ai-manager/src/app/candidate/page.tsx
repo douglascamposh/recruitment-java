@@ -107,7 +107,7 @@ const CandidatePage = () => {
         },
         error: (err) => {
           setIsLoading(false);
-          console.error(err);
+          console.error("Error:", err);
           return err.response?.data?.message || 'Error processing the file.';
         },
       }
