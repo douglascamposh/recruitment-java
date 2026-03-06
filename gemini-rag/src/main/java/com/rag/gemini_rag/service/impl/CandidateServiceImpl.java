@@ -3,6 +3,7 @@ package com.rag.gemini_rag.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rag.gemini_rag.dto.CandidateProfile;
 import com.rag.gemini_rag.dto.ImprovementCandidateResponse;
+import com.rag.gemini_rag.exception.ResourceNotFoundException;
 import com.rag.gemini_rag.repository.CandidateProfileRepository;
 import com.rag.gemini_rag.service.ICandidateService;
 import com.rag.gemini_rag.service.IDocumentReaderService;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CandidateServiceImpl implements ICandidateService {
@@ -54,8 +56,6 @@ public class CandidateServiceImpl implements ICandidateService {
         jsonResponse = Utils.cleanRawJson(jsonResponse);
 
         CandidateProfile profile = objectMapper.readValue(jsonResponse, CandidateProfile.class);
-        log.info(" archvo pdf name>>>>>>>>>>>>", cvFile.getOriginalFilename());
-        log.info(" archvo pdf get name ???????????????", cvFile.getName());
         String userId = "12345"; // obtener del sistema si no tuvieramos user logged deberia ser null
         CandidateProfile profileToSave = new CandidateProfile(
                 null,
@@ -104,6 +104,12 @@ public class CandidateServiceImpl implements ICandidateService {
     @Override
     public Page<CandidateProfile> getCandidatesByUserId(String userId, Pageable pageable) {
         return candidateRepository.findByUserId(userId, pageable);
+    }
+
+    @Override
+    public CandidateProfile getCandidateById(String id) {
+        Optional<CandidateProfile> candidate = candidateRepository.findById(id);
+        return candidate.orElseThrow(() -> new ResourceNotFoundException("Candidate not found with id: " + id));
     }
 
     private String extractStructuredDataFromCv(String cvText) {
