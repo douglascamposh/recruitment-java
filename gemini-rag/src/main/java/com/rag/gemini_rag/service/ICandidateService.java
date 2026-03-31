@@ -12,4 +12,5 @@ public interface ICandidateService {
     CandidateProfile ingestAndProcessCv(MultipartFile cvFile) throws IOException;
     CandidateProfile saveImprovedProfile(ImprovementCandidateResponse candidate);
     Page<CandidateProfile> getCandidatesByUserId(String userId, Pageable pageable);
+    CandidateProfile getCandidateById(String id);
 }

@@ -1,41 +1,70 @@
-// src/app/recruiter/page.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Search, UserCheck } from 'lucide-react';
+import { Search, ArrowDownAZ, Clock } from 'lucide-react';
 import api from '@/services/api';
 import { CandidateMatch, CandidateProfile } from '@/types';
 import SkeletonCard from '@/components/skeletons/SkeletonCard';
-import { json } from 'node:stream/consumers';
+import CandidateDetailModal from '@/components/modals/CandidateDetailModal';
+import CandidateCard from '@/components/cards/CandidateCard';
+import CandidateListItem from '@/components/cards/CandidateListItem';
+import CvUpload from '@/components/upload/CvUpload';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const RecruiterPage = () => {
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+
   const [jobDescription, setJobDescription] = useState('');
   const [matches, setMatches] = useState<CandidateMatch[]>([]);
   const [ingestedProfiles, setIngestedProfiles] = useState<CandidateProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+  
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  
+  // State to control the sorting of the cards
+  const [sortBy, setSortBy] = useState<'match' | 'recent'>('match');
+
+  // Navigation guard to redirect if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const fetchIngestedProfiles = async () => {
+      if (!user?.id) return;
+      
       try {
-        const userId = '12345';// TODO reemplazar con el ID real del usuario autenticado
-        const response = await api.get(`/api/v1/candidates?userId=${userId}&page=0&size=20`);
-        console.log('Perfiles ingeridos:', response.data);
+        setIsLoadingProfiles(true);
+        const response = await api.get(`/api/v1/candidates?userId=${user.id}&page=0&size=20`);
         setIngestedProfiles(response.data.content);
       } catch (error) {
-        toast.error('No se pudieron cargar los perfiles de los candidatos.');
+        toast.error('Could not load candidate profiles.');
       } finally {
         setIsLoadingProfiles(false);
       }
     };
-    fetchIngestedProfiles();
-  }, []);
+    
+    if (!isAuthLoading && isAuthenticated) {
+      fetchIngestedProfiles();
+    }
+  }, [user, isAuthLoading, isAuthenticated]);
+
+  // Callback for when a CV is uploaded successfully
+  const handleUploadSuccess = (newProfile: CandidateProfile) => {
+    // Prefix the new profile to the top of the ingested profiles list
+    setIngestedProfiles((prev) => [newProfile, ...prev]);
+  };
 
   const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!jobDescription.trim()) {
-      toast.error('Por favor, introduce una descripción del puesto.');
+      toast.error('Please enter a job description.');
       return;
     }
     setIsSearching(true);
@@ -44,107 +73,167 @@ const RecruiterPage = () => {
     toast.promise(
       api.post('/api/v1/recruitment/match', { jobDescription }),
       {
-        loading: 'Buscando los mejores candidatos...',
+        loading: 'Searching for the best candidates...',
         success: (response) => {
-          console.log('Resultados de búsqueda:', response.data);
           setMatches(response.data);
           setIsSearching(false);
+          // Reset the filter when making a new search
+          setSortBy('match');
           return response.data.length > 0
-            ? `Se encontraron ${response.data.length} candidatos.`
-            : 'No se encontraron candidatos para esta descripción.';
+            ? `Found ${response.data.length} candidates.`
+            : 'No candidates found for this description.';
         },
         error: (err) => {
           setIsSearching(false);
-          return err.response?.data?.message || 'Hubo un error en la búsqueda.';
+          return err.response?.data?.message || 'An error occurred during the search.';
         },
       }
     );
   };
 
-  return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Módulo del Reclutador</h1>
+  // Logic to dynamically sort the cards
+  const sortedMatches = [...matches].sort((a, b) => {
+    if (sortBy === 'match') {
+      return b.similarityScore - a.similarityScore; // Highest percentage first
+    } else {
+      // Since Mongo IDs have a timestamp embedded, sorting them alphabetically in reverse gives us the most recent
+      return b.profile.id.localeCompare(a.profile.id);
+    }
+  });
 
-      {/* Sección de Búsqueda */}
-      <div className="p-6 bg-white rounded-lg shadow-md mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Búsqueda Semántica</h2>
-        <form onSubmit={handleSearch}>
-          <div className="relative">
-            <textarea
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              rows={5}
-              className="w-full p-4 pr-12 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500"
-              placeholder="Pega aquí la descripción del puesto para encontrar los mejores candidatos..."
-            />
-            <button
-              type="submit"
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400 hover:text-blue-600 disabled:opacity-50"
-              disabled={isSearching}
-            >
-              <Search className="w-6 h-6" />
-            </button>
-          </div>
-        </form>
+  // Show loading while auth checks are resolving
+  if (isAuthLoading || !isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500">Authenticating...</p>
       </div>
+    );
+  }
 
-      {/* Resultados de la Búsqueda */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">Resultados de la Búsqueda</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isSearching && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
-          
-          {matches.map((match) => (
-            <div key={match.profile.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start">
-                <h3 className="text-xl font-bold text-gray-800">{match.profile.candidateName}</h3>
-                
-                <span className="text-lg font-semibold text-blue-600">
-                  {(match.similarityScore * 100).toFixed(0)}%
-                </span>
-              </div>
+  return (
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Recruiter Dashboard</h1>
+          </div>
+        </div>
+
+        {/* Search Section */}
+        <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">AI Semantic Search</h2>
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <textarea
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                rows={4}
+                className="w-full p-4 pr-12 text-gray-700 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Paste the Job Description (JD) here to find the best matching candidates in your database..."
+              />
+              <button
+                type="submit"
+                className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-blue-600 p-2 rounded-full text-white hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md"
+                disabled={isSearching}
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Search Results */}
+        {matches.length > 0 && (
+          <div className="mb-12 animate-fadeIn">
+            {/* Results Header with Filters */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                Top Matches <span className="ml-3 bg-blue-100 text-blue-700 text-sm py-1 px-3 rounded-full">{matches.length} found</span>
+              </h2>
               
-              <p className="text-gray-600 mt-2">Habilidades principales:</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {match.profile.skills.slice(0, 5).map((skill) => (
-                  <span key={skill} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                    {skill}
-                  </span>
-                ))}
+              {/* UI/UX Sorting Buttons */}
+              <div className="flex bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setSortBy('match')}
+                  className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    sortBy === 'match' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <ArrowDownAZ className="w-4 h-4 mr-2" /> Highest Match
+                </button>
+                <button
+                  onClick={() => setSortBy('recent')}
+                  className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    sortBy === 'recent' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Clock className="w-4 h-4 mr-2" /> Most Recent
+                </button>
               </div>
             </div>
-          ))}
+
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {isSearching && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+              
+              {!isSearching && sortedMatches.map((match) => (
+                <CandidateCard 
+                  key={match.profile.id} 
+                  match={match} 
+                  onClick={setSelectedCandidateId} 
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CV Upload Section */}
+        <div className="mb-8 animate-fadeIn">
+          <CvUpload onUploadSuccess={handleUploadSuccess} userId={user.id} />
+        </div>
+
+        {/* Ingested Profiles Panel */}
+        <div>
+           <h2 className="text-xl font-bold mb-4 text-gray-800">Talent Database</h2>
+           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+             
+             {isLoadingProfiles && (
+               <div className="p-8 flex flex-col items-center justify-center text-gray-500 animate-pulse">
+                 <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                 <p>Syncing database...</p>
+               </div>
+             )}
+             
+             {!isLoadingProfiles && ingestedProfiles.length === 0 && (
+               <div className="p-12 text-center">
+                 <p className="text-gray-500 mb-2">No profiles currently indexed in the system.</p>
+                 <p className="text-sm text-gray-400">Profiles will appear here as candidates upload their CVs.</p>
+               </div>
+             )}
+             
+             <ul className="divide-y divide-gray-100">
+               {/* List of candidates */}
+               {ingestedProfiles.map(profile => (
+                  <CandidateListItem 
+                    key={profile.id} 
+                    profile={profile} 
+                    onClick={setSelectedCandidateId} 
+                  />
+               ))}
+             </ul>
+             
+           </div>
         </div>
       </div>
 
-      {/* Panel de Perfiles Ingeridos */}
-      <div className="mt-12">
-         <h2 className="text-2xl font-semibold mb-4 text-gray-700">Perfiles en el Sistema</h2>
-         <div className="bg-white p-6 rounded-lg shadow-md">
-           {isLoadingProfiles && <p>Cargando perfiles...</p>}
-           {!isLoadingProfiles && ingestedProfiles.length === 0 && <p>No hay perfiles en el sistema.</p>}
-           <ul className="space-y-4">
-             {ingestedProfiles.map(profile => (
-                <li key={profile.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <UserCheck className="w-5 h-5 mr-3 text-green-500" />
-                    <div>
-                      <p className="font-semibold">{profile.candidateName}</p>
-                      <p className="text-sm text-gray-600">{profile.email}</p>
-                    </div>
-                  </div>
-                   <div className="flex flex-wrap gap-1 justify-end" style={{maxWidth: '50%'}}>
-                     {profile.skills.slice(0, 3).map(skill => (
-                        <span key={skill} className="bg-gray-200 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                          {skill}
-                        </span>
-                     ))}
-                   </div>
-                </li>
-             ))}
-           </ul>
-         </div>
-      </div>
+      {/* Modal Render */}
+      {selectedCandidateId && (
+        <CandidateDetailModal 
+          candidateId={selectedCandidateId} 
+          onClose={() => setSelectedCandidateId(null)} 
+        />
+      )}
     </div>
   );
 };

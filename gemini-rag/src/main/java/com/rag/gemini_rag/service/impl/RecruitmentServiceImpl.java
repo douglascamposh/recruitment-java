@@ -28,12 +28,10 @@ public class RecruitmentServiceImpl implements IRecruitmentService {
     }
 
     @Override
-    public List<CandidateMatch> findBestCandidatesForJob(String jobDescription, int topK) {
+    public List<CandidateMatch> findBestCandidatesForJob(String jobDescription, int topK, String userId) {
         // 1. Buscar en el Vector Store los CVs más similares a la descripción del trabajo
-//        SearchRequest request = SearchRequest.query(jobDescription).withTopK(topK);
-//        List<Document> similarDocuments = vectorStore.similaritySearch(request);
         String jobDescriptionCleaned = Utils.cleanText(jobDescription);
-        List<Document> similarDocuments = vectorHelper.searchSimilarSpams(jobDescriptionCleaned);
+        List<Document> similarDocuments = vectorHelper.searchSimilarAndByUserId(jobDescriptionCleaned, userId);
 
         // 2. Para cada documento encontrado, recuperar el perfil completo desde MongoDB
         return similarDocuments.stream()

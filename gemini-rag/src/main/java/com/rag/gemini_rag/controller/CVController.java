@@ -36,7 +36,6 @@ public class CVController {
         String clientIp = Utils.getClientIp(request);
 
         if (!rateLimitingService.allowRequest(clientIp)) {
-            // Devolvemos un error 429 Too Many Requests
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body(Map.of("error", "You've reached the limit of 3 free optimizations per day. Please come back tomorrow."));
         }
