@@ -21,8 +21,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.rag.gemini_rag.security.services.UserDetailsImpl;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,7 +60,14 @@ public class CandidateServiceImpl implements ICandidateService {
         jsonResponse = Utils.cleanRawJson(jsonResponse);
 
         CandidateProfile profile = objectMapper.readValue(jsonResponse, CandidateProfile.class);
-        String userId = "12345"; // obtener del sistema si no tuvieramos user logged deberia ser null
+        
+        String userId = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            userId = userDetails.getId();
+        }
+
         CandidateProfile profileToSave = new CandidateProfile(
                 null,
                 cvFile.getOriginalFilename(),
@@ -80,7 +91,12 @@ public class CandidateServiceImpl implements ICandidateService {
         CandidateProfile savedProfile = candidateRepository.save(profileToSave);
 
         // 4. Crear un documento para el Vector Store y añadirlo
-        Document vectorDocument = new Document(cvText, Map.of("profileId", savedProfile.id()));
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("profileId", savedProfile.id());
+        if (userId != null) {
+            metadata.put("userId", userId);
+        }
+        Document vectorDocument = new Document(cvText, metadata);
         vectorStore.add(List.of(vectorDocument));
 
         return savedProfile;

@@ -2,11 +2,14 @@ package com.rag.gemini_rag.controller;
 
 import com.rag.gemini_rag.dto.CandidateMatch;
 import com.rag.gemini_rag.dto.MatchRequest;
+import com.rag.gemini_rag.security.services.UserDetailsImpl;
 import com.rag.gemini_rag.service.IRecruitmentService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,13 +26,17 @@ public class RecruitmentController {
     }
 
     @PostMapping("/match")
-    public ResponseEntity<List<CandidateMatch>> findMatches(@Valid @RequestBody MatchRequest matchRequest) {
+    public ResponseEntity<List<CandidateMatch>> findMatches(@Valid @RequestBody MatchRequest matchRequest, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         String jobDescription = matchRequest.jobDescription();
         if (jobDescription == null || jobDescription.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String userId = userDetails.getId();
         // Puedes añadir un parámetro para topK si quieres que sea configurable
-        List<CandidateMatch> matches = recruitmentService.findBestCandidatesForJob(jobDescription, 5);
+        List<CandidateMatch> matches = recruitmentService.findBestCandidatesForJob(jobDescription, 5, userId);
         return ResponseEntity.ok(matches);
     }
 }

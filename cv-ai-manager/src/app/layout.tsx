@@ -2,8 +2,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { AuthProvider } from '@/context/AuthContext';
+import Header from '@/components/layout/Header';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 text-slate-900 min-h-screen flex flex-col`}
       >
+        <AuthProvider>
         {/* Styled the Toaster slightly to match the modern font */}
         <Toaster 
           position="top-right" 
@@ -36,44 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         
         {/* --- GLOBAL HEADER --- */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 transition-all">
-          <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              
-              {/* Brand / Logo */}
-              <div className="flex-shrink-0 flex items-center">
-                <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-900 hover:opacity-80 transition-opacity">
-                  <Sparkles className="w-6 h-6 text-indigo-600" />
-                  CV Optimizer AI
-                </Link>
-              </div>
-
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex md:items-center md:space-x-8">
-                <Link href="/" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">
-                  Home
-                </Link>
-                <Link href="/candidate" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">
-                  Optimizer
-                </Link>
-                {/* Global Call to Action Button */}
-                <Link 
-                  href="/candidate" 
-                  className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all shadow-sm active:scale-95"
-                >
-                  Get Started
-                </Link>
-              </div>
-
-              {/* Mobile Navigation (Simplified) */}
-              <div className="md:hidden flex items-center">
-                 <Link href="/candidate" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-                  Optimize CV &rarr;
-                </Link>
-              </div>
-            </div>
-          </nav>
-        </header>
+        <Header />
 
         {/* --- MAIN CONTENT --- */}
         {/* flex-grow pushes the footer to the bottom if the content is short */}
@@ -93,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </footer>
+        </AuthProvider>
 
       </body>
     </html>

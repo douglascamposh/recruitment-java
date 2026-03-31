@@ -9,8 +9,14 @@ import SkeletonCard from '@/components/skeletons/SkeletonCard';
 import CandidateDetailModal from '@/components/modals/CandidateDetailModal';
 import CandidateCard from '@/components/cards/CandidateCard';
 import CandidateListItem from '@/components/cards/CandidateListItem';
+import CvUpload from '@/components/upload/CvUpload';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const RecruiterPage = () => {
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+
   const [jobDescription, setJobDescription] = useState('');
   const [matches, setMatches] = useState<CandidateMatch[]>([]);
   const [ingestedProfiles, setIngestedProfiles] = useState<CandidateProfile[]>([]);
@@ -22,11 +28,20 @@ const RecruiterPage = () => {
   // State to control the sorting of the cards
   const [sortBy, setSortBy] = useState<'match' | 'recent'>('match');
 
+  // Navigation guard to redirect if unauthenticated
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
+
   useEffect(() => {
     const fetchIngestedProfiles = async () => {
+      if (!user?.id) return;
+      
       try {
-        const userId = '12345'; // TODO: replace with real user ID
-        const response = await api.get(`/api/v1/candidates?userId=${userId}&page=0&size=20`);
+        setIsLoadingProfiles(true);
+        const response = await api.get(`/api/v1/candidates?userId=${user.id}&page=0&size=20`);
         setIngestedProfiles(response.data.content);
       } catch (error) {
         toast.error('Could not load candidate profiles.');
@@ -34,8 +49,17 @@ const RecruiterPage = () => {
         setIsLoadingProfiles(false);
       }
     };
-    fetchIngestedProfiles();
-  }, []);
+    
+    if (!isAuthLoading && isAuthenticated) {
+      fetchIngestedProfiles();
+    }
+  }, [user, isAuthLoading, isAuthenticated]);
+
+  // Callback for when a CV is uploaded successfully
+  const handleUploadSuccess = (newProfile: CandidateProfile) => {
+    // Prefix the new profile to the top of the ingested profiles list
+    setIngestedProfiles((prev) => [newProfile, ...prev]);
+  };
 
   const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,10 +101,24 @@ const RecruiterPage = () => {
     }
   });
 
+  // Show loading while auth checks are resolving
+  if (isAuthLoading || !isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500">Authenticating...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Recruiter Dashboard</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Recruiter Dashboard</h1>
+          </div>
+        </div>
 
         {/* Search Section */}
         <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
@@ -149,6 +187,11 @@ const RecruiterPage = () => {
             </div>
           </div>
         )}
+
+        {/* CV Upload Section */}
+        <div className="mb-8 animate-fadeIn">
+          <CvUpload onUploadSuccess={handleUploadSuccess} userId={user.id} />
+        </div>
 
         {/* Ingested Profiles Panel */}
         <div>

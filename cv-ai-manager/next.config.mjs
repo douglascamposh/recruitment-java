@@ -2,6 +2,9 @@
 const nextConfig = {
   /* config options here */
   reactCompiler: true,
+  experimental: {
+    proxyTimeout: 120000, // 2 minutes to allow Gemini LLM to finish processing the CV
+  },
   async rewrites() {
     return [
       {

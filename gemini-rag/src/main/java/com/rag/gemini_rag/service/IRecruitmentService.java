@@ -5,5 +5,5 @@ import com.rag.gemini_rag.dto.CandidateMatch;
 import java.util.List;
 
 public interface IRecruitmentService {
-    List<CandidateMatch> findBestCandidatesForJob(String jobDescription, int topK);
+    List<CandidateMatch> findBestCandidatesForJob(String jobDescription, int topK, String userId);
 }

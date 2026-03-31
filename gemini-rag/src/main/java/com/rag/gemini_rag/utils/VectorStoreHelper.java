@@ -17,10 +17,11 @@ public class VectorStoreHelper {
         this.vectorStore = vectorStore;
     }
 
-    public List<Document> searchSimilarSpams(String text) {
+    public List<Document> searchSimilarAndByUserId(String text, String userId) {
         SearchRequest request = SearchRequest.builder()
                 .query(text)
                 .topK(5) //numero de resultados a devolver
+                .filterExpression("userId == '" + userId + "'")
                 .build();
         return vectorStore.similaritySearch(request);
         //este bloque es para filtrar los que son spam
